@@ -1,0 +1,112 @@
+/* Agregar este import para los Google Fonts */
+@import url("https://fonts.googleapis.com/css?family=Loved+by+the+King|Reenie+Beanie");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+
+
+body {
+  font-family: "Loved by the King", cursive;
+  background-color: #5d576b;
+  color: #171a21;
+}
+
+.pedidos-container {
+  display: flex;
+  flex-wrap: wrap; /* Permite que los elementos se muevan a la siguiente línea si no caben */
+  gap: 10px;
+  justify-content: center; /* Centra los elementos en el contenedor */
+  width: 80%;
+  margin: 0 auto;
+  padding-top: 50px;
+}
+.pedido-h1{
+    font-size: 50px;
+    text-align: center;
+    margin-top: 30px;
+}
+.pedido-mesa {
+  text-align: center;
+  font-size: 24px;
+}
+
+.pedidos-productos {
+  font-size: 20px;
+}
+
+.pedido-total {
+  font-weight: bold;
+  font-size: 25px;
+  margin-top: 10px;
+}
+
+.sticky-note {
+  flex: 1 1 calc(33.333% - 20px); /* Ajusta el ancho de las notas para que haya tres por fila */
+  max-width: 350px; /* Define el ancho máximo de las notas */
+  min-height: 320px;
+  padding: 1em;
+  font-size: 20px;
+  letter-spacing: 2px;
+  outline: none;
+  position: relative;
+  margin: 10px;
+  padding-top: 60px; /* Espacio adicional para la cinta */
+  border-radius: 4px; /* Agrega esquinas redondeadas */
+}
+
+.sticky-note::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 20px;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(3deg);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+/* Estilos para las notas sin dobleces */
+.sticky-note-yellow {
+  background-color: #fae3e3;
+  box-shadow: 9px 0px 10px -5px rgba(0, 0, 0, 0.42);
+}
+
+.sticky-note-yellow::before {
+  background-color: rgba(190, 198, 250, 0.8);
+}
+
+.sticky-note-blue {
+  background-color: #6cd4ff;
+  box-shadow: -9px 0px 10px -5px rgba(0, 0, 0, 0.42);
+}
+
+.sticky-note-blue::before {
+  background-color: rgba(184, 255, 184, 0.8);
+}
+
+.sticky-note-green {
+  background-color: #e3fcd4;
+  box-shadow: 9px 0px 10px -5px rgba(0, 0, 0, 0.42);
+}
+
+.sticky-note-green::before {
+  background-color: rgba(255, 147, 147, 0.8);
+}
+
+@media (max-width: 1000px) {
+  .sticky-note {
+    flex: 1 1 calc(50% - 20px); /* Ajusta el ancho de las notas para que haya dos por fila en pantallas más pequeñas */
+  }
+}
+
+@media (max-width: 600px) {
+  .sticky-note {
+    flex: 1 1 calc(100% - 20px); /* Ajusta el ancho de las notas para que haya una por fila en pantallas pequeñas */
+  }
+}

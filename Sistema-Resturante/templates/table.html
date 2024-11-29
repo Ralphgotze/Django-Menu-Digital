@@ -1,0 +1,22 @@
+<!-- seleccionar_mesa.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Mesa</title>
+</head>
+<body>
+    <h1>Selecciona tu Mesa</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="num_table">Número de Mesa:</label>
+        <select id="num_table" name="num_table">
+            {% for table in mesas %}
+                <option value="{{ table.num_table }}">{{ table.num_table }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Seleccionar Mesa</button>
+    </form>
+</body>
+</html>

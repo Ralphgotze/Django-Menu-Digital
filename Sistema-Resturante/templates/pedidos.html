@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos Enviados</title>
+    <link rel="stylesheet" href="{% static 'css/pedidos.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Incluye jQuery -->
+</head>
+<body>
+    <h1 class="pedido-h1">Pedidos Enviados</h1>
+    {% if carritos %}
+    <div class="pedidos-container">
+        {% for carrito in carritos %}
+            {% cycle 'sticky-note-yellow' 'sticky-note-blue' 'sticky-note-green' as note_color silent %}
+            <div id="carrito-{{ carrito.id }}" class="sticky-note {{ note_color }}">
+                <h2 class="pedido-mesa">Mesa: {{ carrito.table }}</h2>
+                <div class="pedidos-productos">
+                    <div class="pedido-total">Total: {{ carrito.total_precio }} Gs.</div>
+                    {% for producto in carrito.productos %}
+                        <div>{{ producto.nombre }} - {{ producto.cantidad }} unidades - ${{ producto.subtotal }}</div>
+                    {% endfor %}
+                    <button onclick="atenderCarrito({{ carrito.id }})">Atender</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No hay pedidos enviados aún.</p>
+    {% endif %}
+    <script>
+        function atenderCarrito(carritoId) {
+            console.log('Atender Carrito ID:', carritoId); // Verificar si el ID del carrito se está pasando correctamente
+            if (!carritoId) {
+                alert("No se pudo obtener el ID del carrito.");
+                return;
+            }
+            // Generar y abrir el PDF en una nueva ventana
+            var pdfUrl = "{% url 'tables:generar_pdf' 0 %}".replace('0', carritoId);
+            var win = window.open(pdfUrl, '_blank');
+            // Esperar a que el PDF se cargue y luego imprimir
+            win.onload = function() {
+                win.print();
+                setTimeout(function() {
+                    // Eliminar el carrito del DOM
+                    document.getElementById('carrito-' + carritoId).remove();
+                    win.close(); // Cerrar la ventana del PDF después de imprimir
+                    // Forzar recarga completa de la página
+                    location.reload(true); // Recargar la página, ignorando el caché
+                }, 1000); // Ajustar el tiempo de espera según sea necesario
+            };
+        }
+
+        // Recargar la página cada 5 segundos
+        setInterval(function() {
+            location.reload(true);
+        }, 3000); // 5000 milisegundos = 5 segundos
+    </script>
+</body>
+</html>

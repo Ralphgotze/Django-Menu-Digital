@@ -1,0 +1,302 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    
+</head>
+<body>
+    <div class="navbar-container">
+        <nav class="navbar">
+            <div id="carrito-modal">
+                <div><button class="cerrar-modal" onclick="cerrarCarrito()">X</button></div>
+                <h3>Carrito de Compras</h3>
+            <div id="productos-en-carrito">
+            <!-- productos del carrito  -->
+            {% for item in carrito %}
+            <div id="producto-{{ item.producto.id }}" class="producto">
+                <div class="carrito-container">
+                    <!-- Fila superior -->
+                    <div class="fila-superior">
+                        <!-- Nombre del producto -->
+                        <div class="nombre" id="nombre-{{ item.producto.id }}">
+                            {{ item.producto.nombre }}
+                        </div>
+                        <!-- Subtotal y botón de eliminar -->
+                        <div class="subtotal-y-eliminar">
+                            <span class="subtotal" id="subtotal-{{ item.producto.id }}">
+                                {{ item.subtotal }} Gs.
+                            </span>
+                            <button class="eliminar-btn" onclick="eliminarProducto({{ item.producto.id }})">
+                                X
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Segunda fila (botones de cantidad) -->
+                    <div class="fila-inferior">
+                        <button onclick="disminuirProducto({{ item.producto.id }})">-</button>
+                        <div class="cantidad" id="cantidad-{{ item.producto.id }}">
+                            {{ item.cantidad }}
+                        </div>
+                        <button onclick="agregarProducto({{ item.producto.id }})">+</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <hr>
+        
+        <!-- Total del carrito -->
+        <div id="total">
+            Total: Gs. {{ total }}
+        </div>
+        <div class="procesar-padre">
+            <button id="procesar-pedido" onclick="enviarCarrito()">Procesar Pedido</button>
+        </div>
+            </div>
+            <img class="navbar-logo" src="/media/logo.png" alt="Logo">
+            <h3 class="navbar-mesa">Mesa <span>{{num_table}}</span></h3>
+            <div class="navbar-buscador">
+              <form class="search">
+                <input class="searchTerm" placeholder="Enter your search term ..." />
+                <button class="searchButton"><img src="/media/search.png" alt=""></button>
+              </form>
+            </div>
+            <div class="navbar-carrito">
+              <div>Llamar </br> Mesero</div>
+              <div><button onclick="carrito()">Carrito De </br> Compras</button></div>
+            </div>
+        </nav>
+    </div>
+    <div class="sidebar">
+        <div class=""><button class="sidebar-button" onclick="mostrarProducto('Menu del Dia')">Menu del <br> Dia</button></div>
+        <div class=""><button class="sidebar-button" onclick="mostrarProducto('Comidas')">Comidas</button></div>
+        <div class=""><button class="sidebar-button" onclick="mostrarProducto('Bebidas')">Bebidas</button></div>
+        <div class=""><button class="sidebar-button" onclick="mostrarProducto('Postres')">Postres</button></div>
+    </div>
+    <br><br><br><br>
+    <div class="container"> 
+        <div class="menu"> 
+            {% for categoria in categorias %} 
+            <div class="menu-group categoria" id="{{categoria}}"> 
+                <h2 class="menu-group-heading">{{categoria}}</h2></br> 
+                {% for producto in productos %} {% if producto.categoria == categoria %} 
+                <div class="producto"> 
+                    <div class="menu-item">
+                        {% if producto.imagen.url %}
+                        <img class="menu-item-image" src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"> 
+                        {% else %}
+                            <img class="menu-item-image" src="https://dummyimage.com/600x400/000/fff" alt="{{producto.nombre}}">
+                        {% endif %}
+                         <div class="menu-item-text"> 
+                            <h3 class="menu-item-heading"> 
+                                <span class="menu-item-name">{{ producto.nombre }}</span> 
+                                <span id="precio" class="menu-item-price">{{ producto.precio }}</span>
+                            </h3>
+                            <p class="menu-item-description"> 
+                                {{producto.descripcion}}                                
+                            </p> 
+                            <button class="agregar-btn" onclick="agregarProducto({{ producto.id }})">Agregar al Carrito</button> 
+                        </div> 
+                    </div> 
+                </div> 
+                {% endif %} 
+                {% endfor %} 
+            </div> 
+        {% endfor %}
+        </div> 
+    </div>
+    
+    <script>
+        // Función para formatear números con puntos de miles
+        function formatNumberWithDot(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+    
+        // Aplicar formato inicial al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            let precios = document.querySelectorAll('#precio, .subtotal');
+            
+            precios.forEach(function(precioElement) {
+                let precio = parseInt(precioElement.textContent.replace('$', '').replace('.', '').trim(), 10); // Convierte el texto en número
+                precioElement.textContent =formatNumberWithDot(precio) + ' Gs.'; // Asigna el nuevo formato con puntos
+            });
+        });
+    
+        function agregarProducto(productoId) {
+            $.ajax({
+                url: "{% url 'tables:agregar_al_carrito' %}",
+                method: "POST",
+                data: {
+                    producto_id: productoId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        const productoDiv = $('#producto-' + productoId);
+                        if (productoDiv.length) {
+                            $('#cantidad-' + productoId).text(response.cantidad);
+                            $('#subtotal-' + productoId).text(formatNumberWithDot(response.subtotal) + ' Gs.');
+                            $('#nombre-' + productoId).text(response.producto);
+                        } else {
+                            const nuevoProducto = `
+                            <div id="producto-${productoId}" class="producto">
+                                <div class="carrito-container">
+                                    <div class="fila-superior">
+                                        <div class="nombre" id="nombre-${productoId}">${response.producto}</div>
+                                        <div class="subtotal-y-eliminar">
+                                            <span class="subtotal" id="subtotal-${productoId}">${formatNumberWithDot(response.subtotal)} Gs.</span>
+                                            <button class="eliminar-btn" onclick="eliminarProducto(${productoId})">X</button>
+                                        </div>
+                                    </div>
+                                    <div class="fila-inferior">
+                                        <button onclick="disminuirProducto(${productoId})">-</button>
+                                        <span class="cantidad" id="cantidad-${productoId}" class="cantidad">${response.cantidad}</span>
+                                        <button onclick="agregarProducto(${productoId})">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                            $('#productos-en-carrito').append(nuevoProducto);
+                        }
+                        $('#total').text('Total: ' + formatNumberWithDot(response.total) + ' Gs.');
+                    }
+                },
+                error: function(error) {
+                    alert("Error al agregar producto");
+                }
+            });
+        }
+    
+        function disminuirProducto(productoId) {
+            $.ajax({
+                url: "{% url 'tables:disminuir_del_carrito' %}",
+                method: "POST",
+                data: {
+                    producto_id: productoId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        if (response.cantidad > 0) {
+                            $('#cantidad-' + productoId).text(response.cantidad);
+                            $('#subtotal-' + productoId).text(formatNumberWithDot(response.subtotal) + ' Gs.');
+                            $('#total').text('Total: ' + formatNumberWithDot(response.total) + ' Gs.');
+                        } else {
+                            $('#producto-' + productoId).remove();
+                            $('#total').text('Total: ' + formatNumberWithDot(response.total) + ' Gs.');
+                        }
+                    }
+                },
+                error: function(error) {
+                    alert("Error al disminuir producto");
+                }
+            });
+        }
+    
+        function eliminarProducto(productoId) {
+            $.ajax({
+                url: "{% url 'tables:eliminar_del_carrito' %}",
+                method: "POST",
+                data: {
+                    producto_id: productoId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        $('#producto-' + productoId).remove();
+                        $('#total').text('Total: ' + formatNumberWithDot(response.total) + ' Gs.');
+                    }
+                },
+                error: function(error) {
+                    alert("Error al eliminar producto");
+                }
+            });
+        }
+    
+
+        
+        function mostrarProducto(categoria){
+            $('.categoria').hide();
+            let x = document.getElementById(categoria)
+            x.style.display = "block"
+            let terminoBusqueda = document.querySelector('.searchTerm').value = "";
+            x.querySelectorAll('.producto').forEach(function(producto) {
+                producto.style.display = 'block'; // Aseguramos que todos los productos se muestren
+            });
+        }
+    </script>
+    <script type="text/javascript" src="{% static 'js/menu.js' %}"></script>
+    <script>
+        document.querySelector('.searchButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Evita el envío del formulario
+        
+            let terminoBusqueda = document.querySelector('.searchTerm').value.toLowerCase();
+            
+            // Para cada categoría, buscar productos que coincidan con el término
+            document.querySelectorAll('.categoria').forEach(function(categoria) {
+                let categoriaVisible = false; // Controla si mostrar la categoría o no
+        
+                categoria.querySelectorAll('.producto').forEach(function(producto) {
+                    let nombreProducto = producto.querySelector('.menu-item-name').textContent.toLowerCase();
+        
+                    // Si el nombre del producto incluye el término de búsqueda
+                    if (nombreProducto.includes(terminoBusqueda)) {
+                        producto.style.display = 'block'; // Mostrar el producto
+                        categoriaVisible = true; // La categoría debe ser visible
+                    } else {
+                        producto.style.display = 'none'; // Ocultar el producto
+                    }
+                });
+        
+                // Mostrar u ocultar la categoría según si tiene productos que coinciden
+                if (categoriaVisible) {
+                    categoria.style.display = 'block';
+                } else {
+                    categoria.style.display = 'none';
+                }
+            });
+        });
+
+        function enviarCarrito() {
+            $.ajax({
+                url: "{% url 'tables:enviar_carrito' %}",
+                method: "POST",
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+                success: function(response) {
+                    console.log('Respuesta:', response); // Verificar la respuesta del servidor
+                    if (response.success) {
+                        alert("El carrito ha sido enviado.");
+        
+                        // Vaciar el carrito en el DOM
+                        $('#productos-en-carrito').empty();
+                        $('#total').text('Total: $0');
+                        
+                        // Aquí puedes agregar cualquier lógica adicional que necesites después de enviar el carrito
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function(error) {
+                    console.log('Error:', error); // Verificar cualquier error en la solicitud AJAX
+                    alert("Error al enviar el carrito");
+                }
+            });
+        }
+         
+        
+    </script>
+</body>
+</html>
